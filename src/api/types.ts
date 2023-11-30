@@ -1,9 +1,9 @@
-export type INote = {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
+export type IEmployee = {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  occupation: string;
 };
 
 export type IGenericResponse = {
@@ -11,13 +11,13 @@ export type IGenericResponse = {
   message: string;
 };
 
-export type INoteResponse = {
+export type IEmployeeResponse = {
   status: string;
-  note: INote;
+  note: IEmployee;
 };
 
-export type INotesResponse = {
+export type IEmployeesResponse = {
   status: string;
   results: number;
-  notes: INote[];
+  employees: IEmployee[];
 };

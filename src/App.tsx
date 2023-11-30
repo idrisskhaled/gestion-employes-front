@@ -7,24 +7,25 @@ import {
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { getNotesFn } from "./api/noteApi";
-import NoteModal from "./components/note.modal";
-import CreateNote from "./components/notes/create.note";
-import NoteItem from "./components/notes/note.component";
+import EmployeeModal from "./components/employee.modal";
+import CreateEmployee from "./components/employees/create.employee";
 import NProgress from "nprogress";
+import EmployeeItem from "./components/employees/employee.component";
+import { IEmployee } from "./api/types";
+import { getEmployeesFn } from "./api/employeeApi";
 
 function AppContent() {
-  const [openNoteModal, setOpenNoteModal] = useState(false);
+  const [openEmployeeModal, setOpenEmployeeModal] = useState(false);
 
   const {
-    data: notes,
+    data: employees,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["getNotes"],
-    queryFn: () => getNotesFn(),
+    queryKey: ["getEmployees"],
+    queryFn: () => getEmployeesFn(),
     staleTime: 5 * 1000,
-    select: (data) => data.notes,
+    select: (data) => data,
     onSuccess() {
       NProgress.done();
     },
@@ -47,37 +48,45 @@ function AppContent() {
       NProgress.start();
     }
   }, [isLoading, isFetching]);
-
   return (
-    <div className="2xl:max-w-[90rem] max-w-[68rem] mx-auto">
-      <div className="m-8 grid grid-cols-[repeat(auto-fill,_320px)] gap-7 grid-rows-[1fr]">
-        <div className="p-4 min-h-[18rem] bg-white rounded-lg border border-gray-200 shadow-md flex flex-col items-center justify-center">
-          <div
-            onClick={() => setOpenNoteModal(true)}
-            className="flex items-center justify-center h-20 w-20 border-2 border-dashed border-ct-blue-600 rounded-full text-ct-blue-600 text-5xl cursor-pointer"
-          >
-            <i className="bx bx-plus"></i>
+    <div className="flex flex-col h-100">
+      <div className="flex justify-between w-100 p-8">
+        <span className="w-[100px]">
+          <img src="src/assets/insat.png" />
+        </span>
+        <span className="w-[100px]">
+          {" "}
+          <img src="src/assets/uc.png" />
+        </span>
+      </div>
+      <div className="w-100 flex justify-center">EMPLOYEES LIST</div>
+      <EmployeeModal
+        openEmployeeModal={openEmployeeModal}
+        setOpenEmployeeModal={setOpenEmployeeModal}
+      >
+        <CreateEmployee setOpenEmployeeModal={setOpenEmployeeModal} />
+      </EmployeeModal>
+      <div className=" mx-auto">
+        <div className="m-8 gap-7 flex flex-col md:flex-row w-100">
+          {(employees as any)?.map((employee: IEmployee) => (
+            <EmployeeItem key={employee.userId} employee={employee} />
+          ))}
+
+          <div className="p-4 min-h-[18rem] w-[300px] bg-gray rounded-lg border border-gray-200 shadow-md flex flex-col items-center justify-center">
+            <div
+              onClick={() => setOpenEmployeeModal(true)}
+              className="flex items-center justify-center h-20 w-20 border-2 border-dashed border-black rounded-full text-black text-5xl cursor-pointer"
+            >
+              <i className="bx bx-plus"></i>
+            </div>
+            <h4
+              onClick={() => setOpenEmployeeModal(true)}
+              className="text-lg font-medium text-black mt-5 cursor-pointer"
+            >
+              Add new Employee
+            </h4>
           </div>
-          <h4
-            onClick={() => setOpenNoteModal(true)}
-            className="text-lg font-medium text-ct-blue-600 mt-5 cursor-pointer"
-          >
-            Add new note
-          </h4>
         </div>
-        {/* Note Items */}
-
-        {notes?.map((note) => (
-          <NoteItem key={note.id} note={note} />
-        ))}
-
-        {/* Create Note Modal */}
-        <NoteModal
-          openNoteModal={openNoteModal}
-          setOpenNoteModal={setOpenNoteModal}
-        >
-          <CreateNote setOpenNoteModal={setOpenNoteModal} />
-        </NoteModal>
       </div>
     </div>
   );

@@ -1,27 +1,28 @@
 import React, { FC, useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import NoteModal from "../note.modal";
-import UpdateNote from "./update.note";
+import UpdateEmployee from "./update.employee";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import NProgress from "nprogress";
-import { INote } from "../../api/types";
-import { deleteNoteFn } from "../../api/noteApi";
+import { deleteEmployeeFn } from "../../api/employeeApi";
+import { IEmployee } from "../../api/types";
+import EmployeeModal from "../employee.modal";
 
-type NoteItemProps = {
-  note: INote;
+type employeeItemProps = {
+  employee: IEmployee;
 };
 
-const NoteItem: FC<NoteItemProps> = ({ note }) => {
+const EmployeeItem: FC<employeeItemProps> = ({ employee }) => {
   const [openSettings, setOpenSettings] = useState(false);
-  const [openNoteModal, setOpenNoteModal] = useState(false);
+  const [openEmployeeModal, setOpenEmployeeModal] = useState(false);
 
   // My addition
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const dropdown = document.getElementById(`settings-dropdown-${note.id}`);
+      const dropdown = document.getElementById(
+        `settings-dropdown-${employee.userId}`
+      );
 
       if (dropdown && !dropdown.contains(target)) {
         setOpenSettings(false);
@@ -32,17 +33,17 @@ const NoteItem: FC<NoteItemProps> = ({ note }) => {
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [note.id]);
+  }, [employee.userId]);
 
   const queryClient = useQueryClient();
-  const { mutate: deleteNote } = useMutation({
-    mutationFn: (noteId: string) => deleteNoteFn(noteId),
+  const { mutate: deleteEmployee } = useMutation({
+    mutationFn: (EmployeeId: string) => deleteEmployeeFn(EmployeeId),
     onMutate() {
       NProgress.start();
     },
     onSuccess(data) {
-      queryClient.invalidateQueries(["getNotes"]);
-      toast("Note deleted successfully", {
+      queryClient.invalidateQueries(["getEmployees"]);
+      toast("Employee deleted successfully", {
         type: "warning",
         position: "top-right",
       });
@@ -62,30 +63,34 @@ const NoteItem: FC<NoteItemProps> = ({ note }) => {
     },
   });
 
-  const onDeleteHandler = (noteId: string) => {
+  const onDeleteHandler = (employeeId: string) => {
     if (window.confirm("Are you sure")) {
-      deleteNote(noteId);
+      deleteEmployee(employeeId);
     }
   };
   return (
     <>
-      <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-md flex flex-col justify-between overflow-hidden">
-        <div className="details">
-          <h4 className="mb-2 pb-2 text-2xl font-semibold tracking-tight text-gray-900">
-            {note.title.length > 40
-              ? note.title.substring(0, 40) + "..."
-              : note.title}
+      <div className="bg-white rounded-lg w-[300px] border border-gray-200 shadow-md flex flex-col justify-between overflow-hidden">
+        <div className="flex justify-center">
+          <img src="src/assets/default-profile.png" className="w-100 mb-4"></img>
+        </div>
+        <div className="p-2 details">
+          <h4 className="text-2xl font-semibold tracking-tight text-gray-900">
+            {(employee.firstName + " " + employee.lastName).length > 40
+              ? (employee.firstName + " " + employee.lastName).substring(
+                  0,
+                  40
+                ) + "..."
+              : employee.firstName + " " + employee.lastName}
           </h4>
           <p className="mb-3 font-normal text-ct-dark-200">
-            {note.content.length > 210
-              ? note.content.substring(0, 210) + "..."
-              : note.content}
+            {employee.occupation.length > 210
+              ? employee.occupation.substring(0, 210) + "..."
+              : employee.occupation}
           </p>
         </div>
-        <div className="relative border-t border-slate-300 flex justify-between items-center">
-          <span className="text-ct-dark-100 text-sm">
-            {format(parseISO(String(note.createdAt)), "PPP")}
-          </span>
+        <div className="p-2 relative border-t border-slate-300 flex justify-between items-center">
+          <span className="text-ct-dark-100 text-sm">{employee.email}</span>
           <div
             onClick={() => setOpenSettings(!openSettings)}
             className="text-ct-dark-100 text-lg cursor-pointer"
@@ -93,7 +98,7 @@ const NoteItem: FC<NoteItemProps> = ({ note }) => {
             <i className="bx bx-dots-horizontal-rounded"></i>
           </div>
           <div
-            id={`settings-dropdown-${note.id}`}
+            id={`settings-dropdown-${employee.userId}`}
             className={twMerge(
               `absolute right-0 bottom-3 z-10 w-28 text-base list-none bg-white rounded divide-y divide-gray-100 shadow`,
               `${openSettings ? "block" : "hidden"}`
@@ -103,7 +108,7 @@ const NoteItem: FC<NoteItemProps> = ({ note }) => {
               <li
                 onClick={() => {
                   setOpenSettings(false);
-                  setOpenNoteModal(true);
+                  setOpenEmployeeModal(true);
                 }}
                 className="py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
               >
@@ -112,7 +117,7 @@ const NoteItem: FC<NoteItemProps> = ({ note }) => {
               <li
                 onClick={() => {
                   setOpenSettings(false);
-                  onDeleteHandler(note.id);
+                  onDeleteHandler(employee.userId);
                 }}
                 className="py-2 px-4 text-sm text-red-600 hover:bg-gray-100 cursor-pointer"
               >
@@ -122,14 +127,14 @@ const NoteItem: FC<NoteItemProps> = ({ note }) => {
           </div>
         </div>
       </div>
-      <NoteModal
-        openNoteModal={openNoteModal}
-        setOpenNoteModal={setOpenNoteModal}
+      <EmployeeModal
+        openEmployeeModal={openEmployeeModal}
+        setOpenEmployeeModal={setOpenEmployeeModal}
       >
-        <UpdateNote note={note} setOpenNoteModal={setOpenNoteModal} />
-      </NoteModal>
+        <UpdateEmployee employee={employee} setOpenEmployeeModal={setOpenEmployeeModal} />
+      </EmployeeModal>
     </>
   );
 };
 
-export default NoteItem;
+export default EmployeeItem;
