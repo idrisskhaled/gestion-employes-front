@@ -1,9 +1,8 @@
 import axios from "axios";
-import { CreateEmployeeInput } from "../components/employees/create.employee";
-import { UpdateEmployeeInput } from "../components/employees/update.employee";
-import { IEmployeeResponse, IEmployeesResponse } from "./types";
+import { ICreateEmployee, IEmployeeResponse, IEmployeesResponse } from "./types";
 
-const BASE_URL = process.env.REACT_APP_BACK_URL || "http://localhost:8080/api/user/employee";
+const BASE_URL =
+  process.env.REACT_APP_EMPLOYEE_API || "http://localhost:8081/api/employee";
 
 export const EmployeeApi = axios.create({
   baseURL: BASE_URL,
@@ -11,13 +10,19 @@ export const EmployeeApi = axios.create({
 
 // EmployeeApi.defaults.headers.common["content-type"] = "application/json";
 
-export const createEmployeeFn = async (Employee: CreateEmployeeInput) => {
-  const response = await EmployeeApi.post<IEmployeeResponse>("", Employee);
+export const createEmployeeFn = async (employee: ICreateEmployee) => {
+  const response = await EmployeeApi.post<IEmployeeResponse>("", employee);
   return response.data;
 };
 
-export const updateEmployeeFn = async (EmployeeId: string, Employee: UpdateEmployeeInput) => {
-  const response = await EmployeeApi.put<IEmployeeResponse>(`/${EmployeeId}`, Employee);
+export const updateEmployeeFn = async (
+  EmployeeId: string,
+  Employee: ICreateEmployee
+) => {
+  const response = await EmployeeApi.put<IEmployeeResponse>(
+    `/${EmployeeId}`,
+    Employee
+  );
   return response.data;
 };
 
@@ -31,8 +36,6 @@ export const getSingleEmployeeFn = async (EmployeeId: string) => {
 };
 
 export const getEmployeesFn = async () => {
-  const response = await EmployeeApi.get<IEmployeesResponse>(
-    ``
-  );
+  const response = await EmployeeApi.get<IEmployeesResponse>(``);
   return response.data;
 };

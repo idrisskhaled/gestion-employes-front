@@ -13,6 +13,8 @@ import NProgress from "nprogress";
 import EmployeeItem from "./components/employees/employee.component";
 import { IEmployee } from "./api/types";
 import { getEmployeesFn } from "./api/employeeApi";
+import insat from "./assets/insat.png";
+import uc from "./assets/uc.png";
 
 function AppContent() {
   const [openEmployeeModal, setOpenEmployeeModal] = useState(false);
@@ -52,26 +54,26 @@ function AppContent() {
     <div className="flex flex-col h-100">
       <div className="flex justify-between w-100 p-8">
         <span className="w-[100px]">
-          <img src="src/assets/insat.png" />
+          <img src={insat} />
         </span>
         <span className="w-[100px]">
-          {" "}
-          <img src="src/assets/uc.png" />
+          <img src={uc} />
         </span>
       </div>
-      <div className="w-100 flex justify-center">EMPLOYEES LIST</div>
+      <div className="w-100 flex justify-center font-bold text-2xl">
+        Meet our team
+      </div>
       <EmployeeModal
         openEmployeeModal={openEmployeeModal}
         setOpenEmployeeModal={setOpenEmployeeModal}
       >
         <CreateEmployee setOpenEmployeeModal={setOpenEmployeeModal} />
       </EmployeeModal>
-      <div className=" mx-auto">
+      <div className="mx-auto">
         <div className="m-8 gap-7 flex flex-col md:flex-row w-100">
           {(employees as any)?.map((employee: IEmployee) => (
-            <EmployeeItem key={employee.userId} employee={employee} />
+            <EmployeeItem key={employee.idUser} employee={employee} />
           ))}
-
           <div className="p-4 min-h-[18rem] w-[300px] bg-gray rounded-lg border border-gray-200 shadow-md flex flex-col items-center justify-center">
             <div
               onClick={() => setOpenEmployeeModal(true)}

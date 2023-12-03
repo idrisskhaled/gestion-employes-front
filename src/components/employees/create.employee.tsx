@@ -1,13 +1,16 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { object, string, TypeOf } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoadingButton } from "../LoadingButton";
+import { LoadingButton } from "../../utils/LoadingButton";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createEmployeeFn } from "../../api/employeeApi";
 import NProgress from "nprogress";
+import FileUpload from "../../utils/FileUpload";
+import { ICreateEmployee, IEmployee } from "../../api/types";
+import { BlobServiceClient } from "@azure/storage-blob";
 
 type ICreateEmployeeProps = {
   setOpenEmployeeModal: (open: boolean) => void;
@@ -21,12 +24,13 @@ const createEmployeeSchema = object({
 });
 
 export type CreateEmployeeInput = TypeOf<typeof createEmployeeSchema>;
+const azureClient = process.env.REACT_APP_AZURE_SERVICE_CLIENT || "";
 
 const CreateEmployee: FC<ICreateEmployeeProps> = ({ setOpenEmployeeModal }) => {
   const methods = useForm<CreateEmployeeInput>({
     resolver: zodResolver(createEmployeeSchema),
   });
-
+  const [file, setFile] = useState<File | null>(null);
   const {
     register,
     handleSubmit,
@@ -36,7 +40,7 @@ const CreateEmployee: FC<ICreateEmployeeProps> = ({ setOpenEmployeeModal }) => {
   const queryClient = useQueryClient();
 
   const { mutate: createEmployee } = useMutation({
-    mutationFn: (Employee: CreateEmployeeInput) => createEmployeeFn(Employee),
+    mutationFn: (employee: ICreateEmployee) => createEmployeeFn(employee),
     onMutate() {
       NProgress.start();
     },
@@ -65,12 +69,30 @@ const CreateEmployee: FC<ICreateEmployeeProps> = ({ setOpenEmployeeModal }) => {
   });
 
   const onSubmitHandler: SubmitHandler<CreateEmployeeInput> = async (data) => {
-    createEmployee(data);
+    if (file) {
+      const blobServiceClient = new BlobServiceClient(azureClient);
+      const containerClient = blobServiceClient.getContainerClient("employes");
+      const blobClient = containerClient.getBlobClient((file as any).name);
+      const blockBlobClient = blobClient.getBlockBlobClient();
+      const result = await blockBlobClient.uploadBrowserData(file, {
+        blockSize: 4 * 1024 * 1024,
+        concurrency: 20,
+        onProgress: (ev) => console.log(ev),
+        blobHTTPHeaders: {
+          blobContentType: (file as any).type,
+        },
+      });
+      createEmployee({ ...data, fileUrl: blobClient.url });
+    } else {
+      createEmployee(data);
+    }
   };
   return (
     <section>
       <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
-        <h2 className="text-2xl text-ct-dark-600 font-semibold">Create Employee</h2>
+        <h2 className="text-2xl text-ct-dark-600 font-semibold">
+          Create Employee
+        </h2>
         <div
           onClick={() => setOpenEmployeeModal(false)}
           className="text-2xl text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg p-1.5 ml-auto inline-flex items-center cursor-pointer"
@@ -79,7 +101,7 @@ const CreateEmployee: FC<ICreateEmployeeProps> = ({ setOpenEmployeeModal }) => {
         </div>
       </div>
       <form className="w-full" onSubmit={handleSubmit(onSubmitHandler)}>
-         <div className="mb-2">
+        <div className="mb-2">
           <label className="block text-gray-700 text-lg mb-2" htmlFor="title">
             First Name
           </label>
@@ -127,6 +149,7 @@ const CreateEmployee: FC<ICreateEmployeeProps> = ({ setOpenEmployeeModal }) => {
             {...methods.register("email")}
           />
         </div>
+        <FileUpload setFile={setFile}>Profile Picture</FileUpload>
         <LoadingButton loading={false}>Create Employee</LoadingButton>
       </form>
     </section>

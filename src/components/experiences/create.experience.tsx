@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { object, string, TypeOf } from "zod";
@@ -6,65 +6,61 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoadingButton } from "../../utils/LoadingButton";
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ICreateEmployee, IEmployee } from "../../api/types";
-import { updateEmployeeFn } from "../../api/employeeApi";
-import { BlobServiceClient } from "@azure/storage-blob";
+import NProgress from "nprogress";
 import FileUpload from "../../utils/FileUpload";
+import { BlobServiceClient } from "@azure/storage-blob";
+import { createExperienceFn } from "../../api/experiencesApi";
+import { ICreateExperience, IEmployee } from "../../api/types";
 
-type IUpdateEmployeeProps = {
+type ICreateExperienceProps = {
+  setOpenExperienceModal: (open: boolean) => void;
   employee: IEmployee;
-  setOpenEmployeeModal: (open: boolean) => void;
 };
+const azureClient = process.env.REACT_APP_AZURE_SERVICE_CLIENT || "";
 
-const updateEmployeeSchema = object({
-  firstName: string().min(1, "firstName is required"),
-  lastName: string().min(1, "lastName is required"),
-  occupation: string().min(1, "occupation is required"),
-  email: string().min(1, "email is required"),
+const createExperienceSchema = object({
+  startDate: string().min(1, "startDate is required"),
+  endDate: string().min(1, "endDate is required"),
+  positionTitle: string().min(1, "positionTitle is required"),
+  companyName: string().min(1, "companyName is required"),
 });
 
-export type UpdateEmployeeInput = TypeOf<typeof updateEmployeeSchema>;
-const azureClient = process.env.REACT_APP_AZURE_SERVICE_CLIENT || "";
-const UpdateEmployee: FC<IUpdateEmployeeProps> = ({
+export type CreateExperienceInput = TypeOf<typeof createExperienceSchema>;
+
+const CreateExperience: FC<ICreateExperienceProps> = ({
+  setOpenExperienceModal,
   employee,
-  setOpenEmployeeModal,
 }) => {
-  const methods = useForm<UpdateEmployeeInput>({
-    resolver: zodResolver(updateEmployeeSchema),
+  const methods = useForm<CreateExperienceInput>({
+    resolver: zodResolver(createExperienceSchema),
   });
   const [file, setFile] = useState<File | null>(null);
-
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = methods;
 
-  useEffect(() => {
-    if (employee) {
-      methods.reset(employee);
-    }
-  }, []);
-
   const queryClient = useQueryClient();
-  const { mutate: updateEmployee } = useMutation({
-    mutationFn: ({
-      employeeId,
-      employee,
-    }: {
-      employeeId: string;
-      employee: ICreateEmployee;
-    }) => updateEmployeeFn(employeeId, employee),
+
+  const { mutate: createExperience, isLoading: loading } = useMutation({
+    mutationFn: (experience: ICreateExperience) =>
+      createExperienceFn(experience),
+    onMutate() {
+      NProgress.start();
+    },
     onSuccess(data) {
-      queryClient.invalidateQueries(["getEmployees"]);
-      setOpenEmployeeModal(false);
-      toast("Employee updated successfully", {
+      queryClient.invalidateQueries(["getExperiences"]);
+      setOpenExperienceModal(false);
+      NProgress.done();
+      toast("Experience created successfully", {
         type: "success",
         position: "top-right",
       });
     },
     onError(error: any) {
-      setOpenEmployeeModal(false);
+      setOpenExperienceModal(false);
+      NProgress.done();
       const resMessage =
         error.response.data.message ||
         error.response.data.detail ||
@@ -77,13 +73,15 @@ const UpdateEmployee: FC<IUpdateEmployeeProps> = ({
     },
   });
 
-  const onSubmitHandler: SubmitHandler<UpdateEmployeeInput> = async (data) => {
+  const onSubmitHandler: SubmitHandler<CreateExperienceInput> = async (
+    data
+  ) => {
     if (file) {
       const blobServiceClient = new BlobServiceClient(azureClient);
       const containerClient = blobServiceClient.getContainerClient("employes");
       const blobClient = containerClient.getBlobClient((file as any).name);
       const blockBlobClient = blobClient.getBlockBlobClient();
-      const result = await blockBlobClient.uploadBrowserData(file, {
+      await blockBlobClient.uploadBrowserData(file, {
         blockSize: 4 * 1024 * 1024,
         concurrency: 20,
         onProgress: (ev) => console.log(ev),
@@ -91,81 +89,87 @@ const UpdateEmployee: FC<IUpdateEmployeeProps> = ({
           blobContentType: (file as any).type,
         },
       });
-      updateEmployee({
-        employeeId: employee.idUser,
-        employee: { ...data, fileUrl: blobClient.url },
+      createExperience({
+        ...data,
+        companyLogo: blobClient.url,
+        idUser: employee.idUser,
       });
     } else {
-      updateEmployee({ employeeId: employee.idUser, employee: data });
+      createExperience({
+        ...data,
+        idUser: employee.idUser,
+      });
     }
   };
   return (
     <section>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
         <h2 className="text-2xl text-ct-dark-600 font-semibold">
-          Update Employee
+          Create Experience
         </h2>
         <div
-          onClick={() => setOpenEmployeeModal(false)}
+          onClick={() => setOpenExperienceModal(false)}
           className="text-2xl text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg p-1.5 ml-auto inline-flex items-center cursor-pointer"
         >
           <i className="bx bx-x"></i>
         </div>
-      </div>{" "}
-      <form className="w-full" onSubmit={handleSubmit(onSubmitHandler)}>
+      </div>
+      <form className="w-full flex flex-col justify-between" onSubmit={handleSubmit(onSubmitHandler)}>
         <div className="mb-2">
           <label className="block text-gray-700 text-lg mb-2" htmlFor="title">
-            First Name
+            Position Title
           </label>
           <input
             className={twMerge(
               `appearance-none border border-gray-400 rounded w-full py-3 px-3 text-gray-700 mb-2  leading-tight focus:outline-none`,
-              `${errors["firstName"] && "border-red-500"}`
+              `${errors["positionTitle"] && "border-red-500"}`
             )}
-            {...methods.register("firstName")}
+            {...methods.register("positionTitle")}
           />
         </div>
         <div className="mb-2">
           <label className="block text-gray-700 text-lg mb-2" htmlFor="title">
-            Last Name
+            Company Name
           </label>
           <input
             className={twMerge(
               `appearance-none border border-gray-400 rounded w-full py-3 px-3 text-gray-700 mb-2  leading-tight focus:outline-none`,
-              `${errors["lastName"] && "border-red-500"}`
+              `${errors["companyName"] && "border-red-500"}`
             )}
-            {...methods.register("lastName")}
+            {...methods.register("companyName")}
           />
         </div>
         <div className="mb-2">
           <label className="block text-gray-700 text-lg mb-2" htmlFor="title">
-            Occupation
+            Start date
           </label>
           <input
+            type="date"
             className={twMerge(
               `appearance-none border border-gray-400 rounded w-full py-3 px-3 text-gray-700 mb-2  leading-tight focus:outline-none`,
-              `${errors["occupation"] && "border-red-500"}`
+              `${errors["startDate"] && "border-red-500"}`
             )}
-            {...methods.register("occupation")}
+            {...methods.register("startDate")}
           />
         </div>
         <div className="mb-2">
           <label className="block text-gray-700 text-lg mb-2" htmlFor="title">
-            Email
+            End date
           </label>
           <input
+            type="date"
             className={twMerge(
               `appearance-none border border-gray-400 rounded w-full py-3 px-3 text-gray-700 mb-2  leading-tight focus:outline-none`,
-              `${errors["email"] && "border-red-500"}`
+              `${errors["endDate"] && "border-red-500"}`
             )}
-            {...methods.register("email")}
+            {...methods.register("endDate")}
           />
         </div>
-        <FileUpload setFile={setFile}>Profile Picture</FileUpload>
-        <LoadingButton loading={false}>Update Employee</LoadingButton>
+        <FileUpload setFile={setFile} >Company Logo</FileUpload>
+        <LoadingButton loading={loading}>Create Experience</LoadingButton>
       </form>
     </section>
   );
 };
 
-export default UpdateEmployee;
+export default CreateExperience;
