@@ -9,6 +9,8 @@ COPY . .
 
 RUN npm run build
 
+RUN npm run test
+
 FROM nginx:alpine
 
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
