@@ -8,7 +8,7 @@ pipeline {
     agent any
     environment {
          DOCKER_HUB_REPO = 'idrisskhaled96/gestion-employes-frontend'
-         //PATH = "/OPT/SONARQUBE/BIN:${ENV.PATH}"
+         PATH = "/var/lib/jenkins/.nvm/versions/node/v18.16.1/bin/:${ENV.PATH}"
          //SONAR_PROJECT_KEY = "gestion-employes"
     }
 
