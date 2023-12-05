@@ -8,7 +8,7 @@ pipeline {
     agent any
     environment {
          DOCKER_HUB_REPO = 'idrisskhaled96/gestion-employes-frontend'
-         IMAGE_TAG = 'latest'
+         //IMAGE_TAG = 'latest'
          //PATH = "/OPT/SONARQUBE/BIN:${ENV.PATH}"
          //SONAR_PROJECT_KEY = "gestion-employes"
     }
@@ -37,7 +37,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                        sh "docker build -t ${env.DOCKER_HUB_REPO}:${env.IMAGE_TAG} ."
+                        sh "docker build -t ${env.DOCKER_HUB_REPO}:${env.BUILD_NUMBER} ."
                 }
             }
         }
@@ -49,7 +49,7 @@ pipeline {
                         withDockerRegistry([url: 'https://index.docker.io/v1/']) {
                             sh "docker logout"
                             sh 'echo $dockerHubPassword | docker login -u $dockerHubUser --password-stdin'
-                            sh "docker push ${env.DOCKER_HUB_REPO}:${env.IMAGE_TAG}"
+                            sh "docker push ${env.DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
                         }
                     }
                 }
