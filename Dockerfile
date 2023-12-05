@@ -9,12 +9,13 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
-RUN npm run test
 # Copy the rest of the application code to the working directory
 COPY . .
 
 # Build the React app
 RUN npm run build
+
+RUN npm run test
 
 # Expose port 80 to the outside world
 EXPOSE 3000
