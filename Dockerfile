@@ -1,22 +1,22 @@
-FROM node:16 as builder
-COPY package*.json  ./
+FROM node:18.2.0-alpine
 
-RUN npm install --force && mkdir /app && mv ./node_modules ./app
+# Set the working directory in the container
+WORKDIR /usr/src/app
 
-WORKDIR /app
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
+# Install app dependencies
+RUN npm install
+
+# Copy the rest of the application code to the working directory
 COPY . .
 
+# Build the React app
 RUN npm run build
 
-FROM nginx:alpine
+# Expose port 80 to the outside world
+EXPOSE 3000
 
-COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
-
-RUN rm -rf /usr/share/nginx/html/*
-
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+# Define the command to run the application
+CMD ["npm", "run", "prod"]

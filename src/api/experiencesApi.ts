@@ -6,7 +6,7 @@ import {
 } from "./types";
 
 const BASE_URL =
-  process.env.REACT_APP_EXPERIENCE_API ||
+  process.env.REACT_APP_EXPERIENCE_API ??
   "http://localhost:8082/api/experience";
 
 export const ExperienceApi = axios.create({

@@ -2,13 +2,11 @@ import axios from "axios";
 import { ICreateEmployee, IEmployeeResponse, IEmployeesResponse } from "./types";
 
 const BASE_URL =
-  process.env.REACT_APP_EMPLOYEE_API || "http://localhost:8081/api/employee";
+  process.env.REACT_APP_EMPLOYEE_API ?? "http://localhost:8081/api/employee";
 
 export const EmployeeApi = axios.create({
   baseURL: BASE_URL,
 });
-
-// EmployeeApi.defaults.headers.common["content-type"] = "application/json";
 
 export const createEmployeeFn = async (employee: ICreateEmployee) => {
   const response = await EmployeeApi.post<IEmployeeResponse>("", employee);
