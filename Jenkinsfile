@@ -24,7 +24,7 @@ pipeline {
         stage('Test with Jest') {
             steps {
                 script {
-                    sh 'mvn use 18.16.1'
+                    sh 'nvm use 18.16.1'
                     sh 'npm run test'
                 }
             }
