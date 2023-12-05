@@ -24,7 +24,7 @@ pipeline {
         stage('Test with Jest') {
             steps {
                 script {
-                    sh 'nvm use 18.16.1'
+                    sh 'whoami'
                     sh 'npm run test'
                 }
             }
