@@ -8,7 +8,6 @@ pipeline {
     agent any
     environment {
          DOCKER_HUB_REPO = 'idrisskhaled96/gestion-employes-frontend'
-         //IMAGE_TAG = 'latest'
          //PATH = "/OPT/SONARQUBE/BIN:${ENV.PATH}"
          //SONAR_PROJECT_KEY = "gestion-employes"
     }
