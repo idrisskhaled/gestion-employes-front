@@ -24,7 +24,7 @@ pipeline {
         stage('Test with Jest') {
             steps {
                 script {
-                    sh 'whoami'
+                    sh 'npm install --force'
                     sh 'npm run test'
                 }
             }
