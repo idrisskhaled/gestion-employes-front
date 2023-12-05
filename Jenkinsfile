@@ -20,27 +20,16 @@ pipeline {
                 }
             }
         }
-            
-        // stage('SonarQube Analysis') {
-        //     steps {
-        //         script {
-        //             // Run SonarQube analysis
-        //            withSonarQubeEnv('SonarQube') {
-         //                sh "mvn -f pom.xml sonar:sonar -Dsonar.exclusions=**/*.java"
-         //           }
-
-        //        }
-         //   }
-        //}  
 
         stage('Test with Jest') {
             steps {
                 script {
+                    sh 'npm install'
                     sh 'npm run test'
                 }
             }
         }
-
+        
         stage('Build Docker Image') {
             steps {
                 script {
