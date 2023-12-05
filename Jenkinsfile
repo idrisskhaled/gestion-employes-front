@@ -24,7 +24,7 @@ pipeline {
         stage('Test with Jest') {
             steps {
                 script {
-                    sh 'export PATH="$PATH:/var/lib/jenkins/.nvm/versions/node/v18.16.1/bin/'
+                    sh "export PATH=$PATH:/var/lib/jenkins/.nvm/versions/node/v18.16.1/bin/"
                     sh 'node --version'
                     sh 'npm insatll --force'
                     sh 'npm run test'
