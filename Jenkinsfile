@@ -24,8 +24,7 @@ pipeline {
         stage('Test with Jest') {
             steps {
                 script {
-                    sh 'npm install --force'
-                    sh 'node --version'
+                    sh 'mvn use 18.16.1'
                     sh 'npm run test'
                 }
             }
