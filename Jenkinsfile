@@ -45,8 +45,8 @@ pipeline {
          stage('Deploy to dev cluster') {
              steps {
                  script {
-                     withCredentials([azureServicePrincipal(credentialsId: 'azure', servicePrincipalId: 'azureClientId', servicePrincipalKey: 'azureClientSecret', tenant: 'azureTenantId')]) {
-                        sh 'az login --service-principal --tenant $azureTenantId --username $azureClientId --password $azureClientSecret'
+                    withCredentials([azureServicePrincipal('credentials_id')]) {
+                        sh 'az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
                     }
                      sh "az account set --subscription e17aee72-105c-4866-a453-005f07809bd2"
                      sh "az aks get-credentials --resource-group gestion-employes --name gestion-employes-dev"
