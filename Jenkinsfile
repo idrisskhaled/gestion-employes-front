@@ -9,7 +9,7 @@ pipeline {
     environment {
     //     REPOSITORY_URL = 'HTTPS://GITHUB.COM/IDRISSKHALED/SPRING-BOOT-HELLO-WORLD'
          DOCKER_HUB_REPO = 'fares24/manage-employees-front'
-         IMAGE_TAG = 'LATEST'
+        // IMAGE_TAG = 'LATEST'
     //     PATH = "/OPT/SONARQUBE/BIN:${ENV.PATH}"
     //     SONAR_PROJECT_KEY = "SPRING-BOOT-HELLO-WORLD"
     }
@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                         // Build the Docker image
-                        sh "docker build -t ${env.DOCKER_HUB_REPO}:${env.IMAGE_TAG} ."
+                        sh "docker build -t ${env.DOCKER_HUB_REPO}:${env.BUILD_NUMBER} ."
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
                         withDockerRegistry([url: 'https://index.docker.io/v1/']) {
                             sh "docker logout"
                             sh 'echo $dockerHubPassword | docker login -u $dockerHubUser --password-stdin'
-                            sh "docker push ${env.DOCKER_HUB_REPO}:${env.IMAGE_TAG}"
+                            sh "docker push ${env.DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
                         }
                     }
                 }
